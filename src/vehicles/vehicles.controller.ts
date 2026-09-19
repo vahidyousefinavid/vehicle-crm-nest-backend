@@ -1,13 +1,16 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermission } from '../auth/require-permission.decorator';
 import { VehiclesService } from './vehicles.service';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('vehicles')
 export class VehiclesController {
   constructor(private svc: VehiclesService) {}
 
   @Get()
+  @RequirePermission('vehicles.view')
   list(
     @Query('q') q?: string,
     @Query('ownerId') ownerId?: string,
@@ -18,6 +21,7 @@ export class VehiclesController {
   }
 
   @Get(':id')
+  @RequirePermission('vehicles.view')
   detail(@Param('id') id: string) {
     return this.svc.detail(id);
   }

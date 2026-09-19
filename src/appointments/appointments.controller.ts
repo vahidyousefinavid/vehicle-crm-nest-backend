@@ -1,14 +1,17 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { RequirePermission } from '../auth/require-permission.decorator';
 import { AppointmentsService } from './appointments.service';
 import { AppointmentStatus } from './appointment.entity';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 @Controller('appointments')
 export class AppointmentsController {
   constructor(private svc: AppointmentsService) {}
 
   @Get()
+  @RequirePermission('appointments.view')
   list(
     @Query('status') status?: AppointmentStatus,
     @Query('page') page = '1',

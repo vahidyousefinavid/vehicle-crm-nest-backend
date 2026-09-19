@@ -7,10 +7,11 @@ import { Review } from '../reviews/review.entity';
 import { Product } from '../products/product.entity';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { UserDetailService } from './user-detail.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User, Vehicle, VehicleAccess, Review, Product])],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, UserDetailService],
 })
 export class UsersModule {}

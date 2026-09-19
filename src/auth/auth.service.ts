@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../users/user.entity';
+import { AdminAccessService } from './admin-access.service';
 
 @Injectable()
 export class AuthService implements OnApplicationBootstrap {
@@ -12,12 +13,13 @@ export class AuthService implements OnApplicationBootstrap {
   constructor(
     @InjectRepository(User) private users: Repository<User>,
     private jwt: JwtService,
+    private access: AdminAccessService,
   ) {}
 
   // Ensures a working admin login always exists, even against a fresh or
   // previously-broken (missing password) database.
   async onApplicationBootstrap() {
-    const phone = process.env.ADMIN_PHONE || '09182144790';
+    const phone = this.access.rootPhone();
     const password = process.env.ADMIN_PASSWORD || 'admin123';
 
     let admin = await this.users.findOne({ where: { phone, role: 'admin' } });
@@ -36,6 +38,9 @@ export class AuthService implements OnApplicationBootstrap {
       await this.users.save(admin);
       this.logger.log(`Set password for existing admin user (${phone})`);
     }
+
+    const backfilled = await this.access.backfillExistingAdmins();
+    if (backfilled) this.logger.log(`Created permission rows for ${backfilled} pre-existing admin(s)`);
   }
 
   async login(phone: string, password: string) {
@@ -51,10 +56,11 @@ export class AuthService implements OnApplicationBootstrap {
     return this.users.findOne({ where: { id } });
   }
 
-  private makeToken(user: User) {
+  private async makeToken(user: User) {
+    const { isSuper, permissions } = await this.access.resolve(user);
     return {
       access_token: this.jwt.sign({ sub: user.id, phone: user.phone }),
-      user: { id: user.id, phone: user.phone, name: user.name, role: user.role },
+      user: { id: user.id, phone: user.phone, name: user.name, role: user.role, isSuper, permissions },
     };
   }
 }

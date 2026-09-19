@@ -17,13 +17,18 @@ export class UsersService {
     @InjectRepository(Product) private products: Repository<Product>,
   ) {}
 
-  async list(params: { role?: 'owner' | 'mechanic' | 'seller'; q?: string; page: number; pageSize: number }) {
+  async list(params: { role?: 'owner' | 'mechanic' | 'seller' | 'admin'; q?: string; page: number; pageSize: number }) {
     const where: any = {};
     if (params.role) where.role = params.role;
-    if (params.q) where.name = ILike(`%${params.q}%`);
+    const like = params.q ? ILike(`%${params.q}%`) : undefined;
+    // a single `where` object ANDs its keys, so the free-text search has to be
+    // expressed as one OR-ed variant per searchable column
+    const scopes: any[] = like
+      ? [{ ...where, name: like }, { ...where, phone: like }, { ...where, workshopName: like }]
+      : [where];
 
     const [rows, total] = await this.users.findAndCount({
-      where,
+      where: scopes,
       order: { createdAt: 'DESC' },
       skip: (params.page - 1) * params.pageSize,
       take: params.pageSize,

@@ -10,6 +10,10 @@ import { PaymentsModule } from './payments/payments.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { OrganizationsModule } from './organizations/organizations.module';
 import { ProductsModule } from './products/products.module';
+import { ManagementModule } from './management/management.module';
+import { CatalogModule } from './catalog/catalog.module';
+import { AdminsModule } from './admins/admins.module';
+import { CommonModule } from './common/common.module';
 
 import { User } from './users/user.entity';
 import { Vehicle } from './vehicles/vehicle.entity';
@@ -32,6 +36,8 @@ import { OrganizationMember } from './organizations/organization-member.entity';
 import { Payment } from './payments/payment.entity';
 import { MechanicService } from './mechanic-services/mechanic-service.entity';
 import { Product } from './products/product.entity';
+import { CatalogItem } from './catalog/catalog-item.entity';
+import { AdminPermission } from './admins/admin-permission.entity';
 
 @Module({
   imports: [
@@ -48,11 +54,15 @@ import { Product } from './products/product.entity';
         VehicleInvite, VehicleAccess, Invoice, InvoiceItem, Notification,
         Review, Appointment, Message, PushSubscription, Part,
         Organization, OrganizationMember, Payment, MechanicService, Product,
+        CatalogItem, AdminPermission,
       ],
       // This app shares the vehicle-service database but never owns the schema —
       // vehicle/service (synchronize: true) is the single source of truth for migrations.
+      // The two exceptions are catalog_items and admin_permissions, which belong to
+      // the panel and are created idempotently by SchemaBootstrapService.
       synchronize: false,
     }),
+    CommonModule,
     AuthModule,
     DashboardModule,
     UsersModule,
@@ -62,6 +72,9 @@ import { Product } from './products/product.entity';
     ReviewsModule,
     OrganizationsModule,
     ProductsModule,
+    ManagementModule,
+    CatalogModule,
+    AdminsModule,
   ],
 })
 export class AppModule {}
